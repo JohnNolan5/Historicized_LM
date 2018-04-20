@@ -5,6 +5,8 @@
 #https://stackoverflow.com/questions/43932973/how-to-give-a-constant-input-to-keras
 #https://machinelearningmastery.com/develop-word-based-neural-language-models-python-keras/ 
 #https://stackoverflow.com/questions/44960558/concatenating-embedded-inputs-to-feed-recurrent-lstm-in-keras
+#https://stackoverflow.com/questions/38445982/how-to-log-keras-loss-output-to-a-file?utm_medium=organic&utm_source=google_rich_qa&utm_campaign=google_rich_qa	
+
 
 #great for sequence to sequence:
 #https://github.com/keras-team/keras/issues/2496
@@ -60,19 +62,19 @@ def process_file_byte(fname, e, data, eras):
 		line = str(line)
 		sline = line.strip().strip('0123456789')
 		if len(sline.split(' ')) > 2:
-			data.append(sline)
+			data.append('<s> '+sline+' </s>')
 			eras.append(e)
 
 def process_file(fname, e, data, eras):
 	for line in open(fname, 'r'):
 		sline = line.strip().strip('0123456789')
 		if len(sline.split(' ')) > 2:
-			data.append(sline)
+			data.append('<s> '+sline+' </s>')
 			eras.append(e)
 
 data, eras = get_data()
 #data is a list of sequences with a 
-tok = Tokenizer()
+tok = Tokenizer(filters='!"#$%&()*+,-.:;=?@[\]^_`{|}~', lower=False) #should try out of vocabulary (oov_token) and limited num_words
 tok.fit_on_texts(data)
 vocab_size = len(tok.word_index) + 1
 enc_data = tok.texts_to_sequences(data) #need to stagger all these sequences for training
@@ -93,20 +95,21 @@ cont_data = cont_data[:-2] #remove end stop character
 
 # add 
 x = np.array(cont_data)
-print('x')
-print(x)
 x = np.reshape(x, (int(x.size/2), 2))
 y = np.array(s_cont_data)
 print('x')
 print(x)
 print('y')
 print(y)
+
 y = to_categorical(y, num_classes=vocab_size)
-print(y)
 
 model = Sequential()
 model.add(Embedding(vocab_size*5, 90, input_length=2))
 model.add(LSTM(50)) # 50 hidden units
 model.add(Dense(vocab_size, activation='softmax')) #choose next word
 model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
-model.fit(x, y, epochs=10)
+history = model.fit(x, y, epochs=10)
+model.save('histor_model.h5')
+loss_history = np.array(history.history['loss'])
+np.savetxt('loss_history.txt', loss_history, delimiter=',')
