@@ -110,6 +110,6 @@ model.add(LSTM(50)) # 50 hidden units
 model.add(Dense(vocab_size, activation='softmax')) #choose next word
 model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
 history = model.fit(x, y, epochs=10)
-model.save('histor_model.h5')
 loss_history = np.array(history.history['loss'])
 np.savetxt('loss_history.txt', loss_history, delimiter=',')
+model.save('histor_model.h5')
